@@ -1,0 +1,24 @@
+Package: InterSpatial
+Type: Package
+Title: Your Package Title
+Version: 0.1.0
+Authors@R: person("Tuhin", "Majumder", email = "majumdertuhin96@gmail.com", role = c("aut", "cre"))
+Description: A brief description of your package.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Depends:
+    Matrix,
+    Seurat,
+    ggplot2,
+    readxl,
+    patchwork,
+    org.Hs.eg.db,
+    dplyr,
+    foreach,
+    parallel,
+    doParallel,
+    BiocManager,
+    HGC
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
