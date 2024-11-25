@@ -1,9 +1,3 @@
----
-title: "Tutorial for InterSpatial"
-output: html_document
-date: "2024-11-25"
----
-
 
 
 ## Loading the Package
