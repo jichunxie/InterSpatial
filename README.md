@@ -1,53 +1,32 @@
 ## InterSpatial
 
-InterSpatial is a R package for augmenting cell-cell communication analysis 
+InterSpatial is a R package for augmenting cell-cell communication (CCC) analysis for scRNA-seq/snRNA-seq with a low resolution spatial transcriptomic data. Using gene expressions from these different data modalities, InterSpatial is able to detect CCC through ligand-receptor interaction
 
 
 
-## Loading the DataSets
+## Installation
 
-The datasets used here are only for demonstration, they do not constitute any meaningful result.
-
-
-```r
-sample_names <- c("19-092_RLL","22-221_LLL","22-295_LUL","22-313_LUL","22-401_LUL","22-221_RLL")
-ind_sample_name <- 1
-sample_name <- sample_names[ind_sample_name]
-print(ind_sample_name)
-```
-
-```
-## [1] 1
-```
+The InterSpatial R package can be installed using devtools:
 
 ```r
-data.dir = paste0("/work/tm389/Visium_Lung/",sample_name) ## Change to Your Location
-Lung <- Load10X_Spatial(data.dir,
-                        filename = "raw_feature_bc_matrix.h5",
-                        assay = "Spatial",
-                        slice = "slice",
-                        filter.matrix = TRUE,
-                        to.upper = FALSE,
-                        image = NULL)
-```
+devtools::install_github("jichunxie/InterSpatial")
 
 ```
-## Warning: Feature names cannot have underscores ('_'), replacing with dashes ('-')
-```
+### Installation of Dependencies
+
+Make sure you have installed the following dependencies with correct version
+
+- The package is built and tested using [Seurat(<= 4.4.0)](https://satijalab.org/seurat/). Users are recommended to use this versions, the output may be altered if using newer Seurat versions.
+
+- Install [HGC](https://www.bioconductor.org/packages/devel/bioc/html/HGC.html) package for Hierarchical Graph Clustering using the following command:
 
 ```r
-## scRNA Data
-dat_scRNA <- pbmc_small
+# Install BiocManager if not already installed
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
 
-## Visium Data
-dat_visium <- Lung
+# Install the HGC package from Bioconductor
+BiocManager::install("HGC")
 ```
 
 
-## Transform the Datasets
-
-
-```r
-dat_scRNA <- InterSpatial::transform_scRNA_data(dat_scRNA)
-dat_visium <- InterSpatial::transform_spatial_data(dat_visium)
-```
