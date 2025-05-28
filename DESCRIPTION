@@ -1,24 +1,25 @@
 Package: InterSpatial
 Type: Package
-Title: Your Package Title
+Title: Inter-Modality Cell Communication via Spatial and scRNA-seq Integration
 Version: 0.1.0
 Authors@R: person("Tuhin", "Majumder", email = "majumdertuhin96@gmail.com", role = c("aut", "cre"))
-Description: A brief description of your package.
+Description: Tools for integrative analysis of spatial transcriptomics and scRNA-seq data. Includes SCTransform normalization, intermodality probability matrix computation, hierarchical clustering using ClusteringTree, and Wasserstein distance calculation for cluster comparison. Parallelization supported.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Depends:
+Imports:
     Matrix,
-    Seurat,
+    Seurat (== 4.4.0),
     ggplot2,
     readxl,
     patchwork,
     org.Hs.eg.db,
+    AnnotationDbi,
     dplyr,
     foreach,
     parallel,
     doParallel,
-    BiocManager,
+    transport,
     HGC
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1

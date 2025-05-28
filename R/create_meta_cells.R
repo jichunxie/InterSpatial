@@ -1,60 +1,66 @@
-#' Cell clustering using HGC
+#' Hierarchical Graph Clustering for scRNA-seq
 #'
-#' Divide the single cell data into required number of clusters/meta-cells
+#' Applies PCA and hierarchical clustering (HGC) to scRNA-seq data using Seurat and ClusteringTree.
 #'
-#' @param dat_scRNA A Seurat object containing scRNA data, with SCT assay
-#' @param k Number of desired cell clusters or meta-cells
-#' @param num_pca Number of PCA
-#' @param p_hvg Number of highly variable genes
+#' @param dat_scRNA Seurat object with SCT assay.
+#' @param k Number of clusters to cut from hierarchical tree.
+#' @param num_pca Number of principal components.
+#' @param p_hvg Number of highly variable genes.
 #'
-#' @return Returns the cluster labels of each cell
+#' @return A data frame with cell names and assigned cluster IDs.
+#'
+#' @importFrom Seurat VariableFeatures ScaleData RunPCA FindNeighbors
+#' @importFrom HGC FindClusteringTree
+#' @importFrom stats cutree
 #' @export
-#'
-#' @importFrom HGC FindNeighbors FindClusteringTree cutree
+
 find_cluster_scRNA_HGC <- function(dat_scRNA,k, num_pca=100,p_hvg=2000)
 {
-
+  
   hvg_sc <- VariableFeatures(dat_scRNA)[1:p_hvg]
   dat_scRNA <- ScaleData(dat_scRNA, features = hvg_sc)
   dat_scRNA <- RunPCA(dat_scRNA, assay="SCT", npcs=num_pca, features = hvg_sc)
-
-
-
+  
+  
+  
   set.seed(12345)
   dat_scRNA_cluster <- FindNeighbors(dat_scRNA,reduction = "pca", dims = 1:num_pca)
-
+  
   dat_scRNA_cluster <- FindClusteringTree(dat_scRNA_cluster)
-
-
+  
+  
   clusters <- cutree(dat_scRNA_cluster@graphs$ClusteringTree, k=k)
-
-
+  
+  
   clusters_dat_scRNA <- data.frame("cell"=colnames(dat_scRNA_cluster),
-                                  "cluster"=clusters)
-
+                                   "cluster"=clusters)
+  
   return (clusters_dat_scRNA)
 }
 
 
 
 
-#' Avg. Spatial probability of a cluster/meta-cell
+
+#' Compute Probability Vector for a Single Cluster
 #'
-#' @param prob_data The cell by spot probability matrix
-#' @param cluster_labels Assigned cluster labels of the cells. Length should be equal to the nrow(prob_data), and the i^th entry should correspond to the i^th row of prob_data
-#' @param cluster_id The input cluster id
+#' Computes mean probabilities for all spatial regions given one cluster of scRNA-seq data.
 #'
-#' @return The avg. probability distribution of the selected cluster
+#' @param prob_data Probability matrix (cells x spatial spots).
+#' @param cluster_labels A vector of cluster labels for each cell.
+#' @param cluster_id The cluster ID to compute the average for.
+#'
+#' @return A numeric vector of average probabilities for the selected cluster.
 #'
 #' @importFrom Matrix rowSums
-#'
 #' @export
+
 compute_single_cluster_prob <- function(prob_data,cluster_labels, cluster_id)
 {
   nnz_cell <- which(Matrix::rowSums(prob_data)>0)
   cells <- which(cluster_labels==cluster_id)
   nnz_cluster_cells <- intersect(cells, nnz_cell)
-
+  
   if (length(nnz_cluster_cells) > 1) {
     res <- colMeans(as.matrix(prob_data[as.numeric(nnz_cluster_cells), ]))
   } else {
@@ -67,16 +73,23 @@ compute_single_cluster_prob <- function(prob_data,cluster_labels, cluster_id)
   res
 }
 
-
-#' Avg. Spatial probability of all clusters/meta-cells
+#' Aggregate Probabilities Across All Clusters
 #'
-#' @param prob_data The cell by spot probability matrix
-#' @param cluster_labels Assigned cluster labels of the cells. Length should be equal to the nrow(prob_data), and the i^th entry should correspond to the i^th row of prob_data
-#' @param nCores Number of cores for parallelization
+#' Computes a new matrix of average probabilities for each cluster using parallelization.
 #'
-#' @return The spatial probability matrix of the meta-cells. Each row corresponds to one such cluster.
+#' @param prob_data Probability matrix (cells x spatial spots).
+#' @param cluster_labels A vector of cluster labels for each cell.
+#' @param nCores Optional number of CPU cores to use.
 #'
+#' @return A sparse matrix (clusters x spatial spots).
+#'
+#' @importFrom Matrix Matrix
+#' @importFrom parallel detectCores makeCluster stopCluster
+#' @importFrom foreach foreach %dopar%
+#' @importFrom doParallel registerDoParallel
 #' @export
+
+
 compute_all_clusters_prob_matrix <- function(prob_data,cluster_labels,nCores=NULL)
 {
   unique_clusters <- unique(cluster_labels)
@@ -84,7 +97,7 @@ compute_all_clusters_prob_matrix <- function(prob_data,cluster_labels,nCores=NUL
   {
     cores= min(20,detectCores()-2)
   }else{
-    cores=nCores
+    cores= min(nCores,detectCores()-2)
   }
   cl <- makeCluster(cores)
   registerDoParallel(cl)
@@ -97,17 +110,18 @@ compute_all_clusters_prob_matrix <- function(prob_data,cluster_labels,nCores=NUL
     prob_cluster
   }
   stopCluster(cl)
-
-
+  
+  
   k  <- length(unique_clusters)
   prob_data_hier_cluster <- matrix(0,nrow=k,ncol=ncol(prob_data))
   for(i in 1:k)
   {
     prob_data_hier_cluster[i,]=prob_data_hier_cluster_list[[i]]
-
+    
   }
-
+  
   prob_data_hier_cluster <- Matrix(prob_data_hier_cluster,sparse=TRUE)
   return(prob_data_hier_cluster)
-
+  
 }
+
