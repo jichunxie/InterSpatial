@@ -1,14 +1,6 @@
----
-title: "Tutorial for InterSpatial"
-output: html_document
-date: "2024-11-25"
----
-
-
-
 ## InterSpatial
 
-InterSpatial is 
+InterSpatial is a R package for augmenting cell-cell communication analysis 
 
 
 
