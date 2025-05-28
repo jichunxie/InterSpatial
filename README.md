@@ -29,4 +29,6 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
 BiocManager::install("HGC")
 ```
 
+## Tutorials
 
+Tutorials for using InterSpatial can be found [here](https://github.com/jichunxie/InterSpatial/tree/main/Vignettes).
