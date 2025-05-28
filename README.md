@@ -31,4 +31,4 @@ BiocManager::install("HGC")
 
 ## Tutorials
 
-Tutorials for using InterSpatial can be found [here](https://htmlpreview.github.io/?https://github.com/jichunxie/InterSpatial/blob/main/vignettes/interspatial_tutorial.html).
+Tutorials for using InterSpatial can be found [here](https://htmlpreview.github.io/?https://github.com/jichunxie/InterSpatial/blob/main/Vignettes/interspatial_tutorial.html).
