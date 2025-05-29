@@ -13,7 +13,7 @@ author: Tuhin Majumder
 
 
 
-## Loading the required libraries
+# Loading the required libraries
 
 ```{r message=FALSE, warning=FALSE}
 library(InterSpatial)
@@ -22,14 +22,14 @@ library(HGC)
 ```
 
 
-## Preprocessing of the input datasets
+# Preprocessing of the input datasets
 
 InterSpatial uses two major inputs - gene expression of single cells, and the gene expression of the visium data. Ideally, the single-cell data input is a Seurat object with `.rds` file extension. A gene by cell count matrix is also fine as input, with the row names as gene names and the column names as cell ids. In this case, a Seurat object is created with an optional `metadata` input. The Seurat object is then transformed using `SCTransform` normalization from Seurat package. The full operation is carried out by the function `transform_scRNA_data`, starting from creating a Seurat object (if needed) and then applying the required transformation. The output Seurat object contains the input assays (typically the `RNA` assay) and the `SCT` assay.
 
 The visium data input must be a `.h5` file from the Space Ranger output, containing gene count matrix for the spots. We recommend separate directories for each visium sample which should contain the "spatial" folder and the input `.h5` file. The `SCTransform` should be then applied to the visium data using `transform_spatial_data` function. 
 
 
-### Processing scRNA-seq data
+## Processing scRNA-seq data
 
 ```{r message=FALSE, warning=FALSE}
 ## Read scRNA data
@@ -41,7 +41,7 @@ dat_scRNA <- transform_scRNA_data(dat_scRNA)
 ```
 
 
-### Processing Visium data
+## Processing Visium data
 
 ```{r message=FALSE, warning=FALSE}
 ## Load visium Data
@@ -58,4 +58,16 @@ dat_visium <- Load10X_Spatial(visium.data.dir,
 
 ## Transform the visium data
 dat_visium <- transform_spatial_data(dat_visium)
+```
+
+
+# Create cell by spot probability matrix
+
+From the transformed input data sets, we developed an algorithm to map the single cells onto visium spots. The function `create_probability_matrix` creates a cell by spot probability, each row corresponding to a cell and each column to a spot. The rows with sum $1$ represent the cell-specific probability mapping vectors of those cells, and the rows with sum $0$ represent the cells not mapped to the visium data at all. Thus, InterSpatial inheriently removes the cells uncorrelated with the visium spots from the analysis.
+
+```{r message=FALSE, warning=FALSE}
+## Create Probability matrix
+
+prob_matrix <- create_probability_matrix(dat_scRNA = dat_scRNA,dat_visium = dat_visium, p_hvg=50, num_pca = 10, alpha=0.05, nCores=8)
+
 ```

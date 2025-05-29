@@ -1644,18 +1644,24 @@ display: none;
 <li><a href="#loading-the-required-libraries" id="toc-loading-the-required-libraries">Loading the required
 libraries</a></li>
 <li><a href="#preprocessing-of-the-input-datasets" id="toc-preprocessing-of-the-input-datasets">Preprocessing of the input
-datasets</a></li>
+datasets</a>
+<ul>
+<li><a href="#processing-scrna-seq-data" id="toc-processing-scrna-seq-data">Processing scRNA-seq data</a></li>
+<li><a href="#processing-visium-data" id="toc-processing-visium-data">Processing Visium data</a></li>
+</ul></li>
+<li><a href="#create-cell-by-spot-probability-matrix" id="toc-create-cell-by-spot-probability-matrix">Create cell by spot
+probability matrix</a></li>
 </ul>
 </div>
 
-<div id="loading-the-required-libraries" class="section level2">
-<h2>Loading the required libraries</h2>
+<div id="loading-the-required-libraries" class="section level1">
+<h1>Loading the required libraries</h1>
 <pre class="r"><code>library(InterSpatial)
 library(Seurat)
 library(HGC)</code></pre>
 </div>
-<div id="preprocessing-of-the-input-datasets" class="section level2">
-<h2>Preprocessing of the input datasets</h2>
+<div id="preprocessing-of-the-input-datasets" class="section level1">
+<h1>Preprocessing of the input datasets</h1>
 <p>InterSpatial uses two major inputs - gene expression of single cells,
 and the gene expression of the visium data. Ideally, the single-cell
 data input is a Seurat object with <code>.rds</code> file extension. A
@@ -1674,8 +1680,8 @@ separate directories for each visium sample which should contain the
 “spatial” folder and the input <code>.h5</code> file. The
 <code>SCTransform</code> should be then applied to the visium data using
 <code>transform_spatial_data</code> function.</p>
-<div id="processing-scrna-seq-data" class="section level3">
-<h3>Processing scRNA-seq data</h3>
+<div id="processing-scrna-seq-data" class="section level2">
+<h2>Processing scRNA-seq data</h2>
 <pre class="r"><code>## Read scRNA data
 dat_scRNA &lt;- readRDS(&quot;../data/toy_scRNA/mouse_brain_small.rds&quot;)
 
@@ -1683,8 +1689,8 @@ dat_scRNA &lt;- readRDS(&quot;../data/toy_scRNA/mouse_brain_small.rds&quot;)
 
 dat_scRNA &lt;- transform_scRNA_data(dat_scRNA)</code></pre>
 </div>
-<div id="processing-visium-data" class="section level3">
-<h3>Processing Visium data</h3>
+<div id="processing-visium-data" class="section level2">
+<h2>Processing Visium data</h2>
 <pre class="r"><code>## Load visium Data
 # Change the data location with user&#39;s convenience
 visium.data.dir = &quot;../data/toy_visium/&quot; 
@@ -1700,6 +1706,59 @@ dat_visium &lt;- Load10X_Spatial(visium.data.dir,
 ## Transform the visium data
 dat_visium &lt;- transform_spatial_data(dat_visium)</code></pre>
 </div>
+</div>
+<div id="create-cell-by-spot-probability-matrix" class="section level1">
+<h1>Create cell by spot probability matrix</h1>
+<p>From the transformed input data sets, we developed an algorithm to
+map the single cells onto visium spots. The function
+<code>create_probability_matrix</code> creates a cell by spot
+probability, each row corresponding to a cell and each column to a spot.
+The rows with sum <span class="math inline">\(1\)</span> represent the
+cell-specific probability mapping vectors of those cells, and the rows
+with sum <span class="math inline">\(0\)</span> represent the cells not
+mapped to the visium data at all. Thus, InterSpatial inheriently removes
+the cells uncorrelated with the visium spots from the analysis.</p>
+<pre class="r"><code>## Create Probability matrix
+
+prob_matrix &lt;- create_probability_matrix(dat_scRNA = dat_scRNA,dat_visium = dat_visium, p_hvg=50, num_pca = 10, alpha=0.05, nCores=8)</code></pre>
+<pre><code>## [1] &quot;Checking gene ensemble information for scRNA and Visium data...&quot;
+## [1] &quot;Extracting gene names and variable features...&quot;
+## [1] &quot;Finding variable features for Visium data...&quot;
+## [1] &quot;Identifying common genes for integration...&quot;
+## [1] &quot;Performing dimensionality reduction on Visium data...&quot;
+## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
+## 
+## Number of nodes: 2825
+## Number of edges: 98333
+## 
+## Running Louvain algorithm...
+## Maximum modularity in 10 random starts: 0.7948
+## Number of communities: 9
+## Elapsed time: 0 seconds
+## [1] &quot;Performing dimensionality reduction on scRNA data...&quot;
+## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
+## 
+## Number of nodes: 1000
+## Number of edges: 30831
+## 
+## Running Louvain algorithm...
+## Maximum modularity in 10 random starts: 0.9001
+## Number of communities: 7
+## Elapsed time: 0 seconds
+## [1] &quot;Extracting PCA embeddings and feature loadings...&quot;
+## [1] &quot;Filtering to common genes across datasets...&quot;
+## [1] &quot;Computing projection matrices...&quot;
+## [1] &quot;Combining data for correlation analysis...&quot;
+## [1] &quot;Normalizing correlation matrices...&quot;
+## [1] &quot;Computing correlation matrix...&quot;
+## [1] &quot;Adjusting correlation matrix based on spatial information...&quot;
+## [1] &quot;Setting up clustering variables...&quot;
+## [1] &quot;Determining available CPU cores for parallel processing...&quot;
+## [1] &quot;Using 8 CPU cores for parallel processing...&quot;
+## [1] &quot;Running FDR calculations in parallel...&quot;
+## [1] &quot;Parallel computation complete. Compiling results...&quot;
+## [1] &quot;Constructing sparse matrix efficiently...&quot;
+## [1] &quot;Probability matrix computation complete!&quot;</code></pre>
 </div>
 
 
