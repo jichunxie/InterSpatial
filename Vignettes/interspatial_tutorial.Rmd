@@ -1,53 +1,61 @@
 ---
 title: "Tutorial for InterSpatial"
-output: html_document
+output:
+  html_document:
+    theme: readable   # or cosmo, flatly, united, etc.
+    toc: true
+    toc_depth: 2
+    df_print: paged
+
 date: "2024-11-25"
+author: Tuhin Majumder
 ---
 
 
 
-## Loading the Package
+## Loading the required libraries
 
-```{r echo=FALSE}
+```{r message=FALSE, warning=FALSE}
 library(InterSpatial)
 library(Seurat)
 library(HGC)
 ```
 
 
-## Loading the DataSets
+## Preprocessing of the input datasets
 
-The datasets used here are only for demonstration, they do not constitute any meaningful result.
+InterSpatial uses two major inputs - gene expression of single cells, and the gene expression of the visium data. Ideally, the single-cell data input is a Seurat object with `.rds` file extension. A gene by cell count matrix is also fine as input, with the row names as gene names and the column names as cell ids. In this case, a Seurat object is created with an optional `metadata` input. The Seurat object is then transformed using `SCTransform` normalization from Seurat package. The full operation is carried out by the function `transform_scRNA_data`, starting from creating a Seurat object (if needed) and then applying the required transformation. The output Seurat object contains the input assays (typically the `RNA` assay) and the `SCT` assay.
 
-```{r}
-sample_names <- c("19-092_RLL","22-221_LLL","22-295_LUL","22-313_LUL","22-401_LUL","22-221_RLL")
-ind_sample_name <- 1
-sample_name <- sample_names[ind_sample_name]
-print(ind_sample_name)
-data.dir = paste0("/work/tm389/Visium_Lung/",sample_name) ## Change to Your Location
-Lung <- Load10X_Spatial(data.dir,
-                        filename = "raw_feature_bc_matrix.h5",
+The visium data input must be a `.h5` file from the Space Ranger output, containing gene count matrix for the spots. We recommend separate directories for each visium sample which should contain the "spatial" folder and the input `.h5` file. The `SCTransform` should be then applied to the visium data using `transform_spatial_data` function. 
+
+
+### Processing scRNA-seq data
+
+```{r message=FALSE, warning=FALSE}
+## Read scRNA data
+dat_scRNA <- readRDS("../data/toy_scRNA/mouse_brain_small.rds")
+
+#Transform scRNA data
+
+dat_scRNA <- transform_scRNA_data(dat_scRNA)
+```
+
+
+### Processing Visium data
+
+```{r message=FALSE, warning=FALSE}
+## Load visium Data
+# Change the data location with user's convenience
+visium.data.dir = "../data/toy_visium/" 
+dat_visium <- Load10X_Spatial(visium.data.dir,
+                        filename = "mouse_filtered_feature_bc_matrix.h5",
                         assay = "Spatial",
                         slice = "slice",
                         filter.matrix = TRUE,
                         to.upper = FALSE,
                         image = NULL)
 
-## scRNA Data
-dat_scRNA <- pbmc_small
 
-## Visium Data
-dat_visium <- Lung
-
-
-
-```
-
-
-## Transform the Datasets
-
-```{r}
-dat_scRNA <- InterSpatial::transform_scRNA_data(dat_scRNA)
-dat_visium <- InterSpatial::transform_spatial_data(dat_visium)
-
+## Transform the visium data
+dat_visium <- transform_spatial_data(dat_visium)
 ```

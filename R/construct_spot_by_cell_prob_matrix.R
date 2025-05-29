@@ -12,7 +12,7 @@
 #' @return A sparse probability matrix (spatial clusters x scRNA clusters).
 #'
 #' @importFrom Seurat VariableFeatures FindVariableFeatures ScaleData RunPCA FindNeighbors FindClusters GetAssayData
-#' @importFrom Matrix sparseMatrix
+#' @importFrom Matrix sparseMatrix colSums rowSums t
 #' @importFrom parallel detectCores makeCluster stopCluster
 #' @importFrom foreach foreach %dopar%
 #' @importFrom doParallel registerDoParallel
@@ -246,6 +246,8 @@ create_probability_matrix <- function(dat_scRNA, dat_visium, p_hvg=2000, num_pca
   all_cols <- unlist(lapply(results_list, function(res) rep(res$sc_ind, each = length(res$dat_visium_ind))))
   all_values <- unlist(lapply(results_list, function(res) as.numeric(res$vec)))
   
+
+  
   print("Constructing sparse matrix efficiently...")
   
   # ✅ Filter out zero values (ensures only nonzero values remain)
@@ -271,7 +273,7 @@ create_probability_matrix <- function(dat_scRNA, dat_visium, p_hvg=2000, num_pca
   #   print(res_ind)
   # }
   
-  print("Normalizing final probability matrix...")
+ 
   col_sums <- colSums(cor_M_sparse)
   col_sums[col_sums == 0] <- 1
   cor_M_sparse_new <- cor_M_sparse
