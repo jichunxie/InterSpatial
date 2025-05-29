@@ -65,7 +65,7 @@ dat_visium <- transform_spatial_data(dat_visium)
 
 From the transformed input data sets, we developed an algorithm to map the single cells onto visium spots. The function `create_probability_matrix` creates a cell by spot probability, each row corresponding to a cell and each column to a spot. The rows with sum $1$ represent the cell-specific probability mapping vectors of those cells, and the rows with sum $0$ represent the cells not mapped to the visium data at all. Thus, InterSpatial inheriently removes the cells uncorrelated with the visium spots from the analysis.
 
-```{r message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, results='hide'}
 ## Create Probability matrix
 
 prob_matrix <- create_probability_matrix(dat_scRNA = dat_scRNA,dat_visium = dat_visium, p_hvg=50, num_pca = 10, alpha=0.05, nCores=8)

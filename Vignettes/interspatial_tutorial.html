@@ -1721,44 +1721,6 @@ the cells uncorrelated with the visium spots from the analysis.</p>
 <pre class="r"><code>## Create Probability matrix
 
 prob_matrix &lt;- create_probability_matrix(dat_scRNA = dat_scRNA,dat_visium = dat_visium, p_hvg=50, num_pca = 10, alpha=0.05, nCores=8)</code></pre>
-<pre><code>## [1] &quot;Checking gene ensemble information for scRNA and Visium data...&quot;
-## [1] &quot;Extracting gene names and variable features...&quot;
-## [1] &quot;Finding variable features for Visium data...&quot;
-## [1] &quot;Identifying common genes for integration...&quot;
-## [1] &quot;Performing dimensionality reduction on Visium data...&quot;
-## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
-## 
-## Number of nodes: 2825
-## Number of edges: 98333
-## 
-## Running Louvain algorithm...
-## Maximum modularity in 10 random starts: 0.7948
-## Number of communities: 9
-## Elapsed time: 0 seconds
-## [1] &quot;Performing dimensionality reduction on scRNA data...&quot;
-## Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
-## 
-## Number of nodes: 1000
-## Number of edges: 30831
-## 
-## Running Louvain algorithm...
-## Maximum modularity in 10 random starts: 0.9001
-## Number of communities: 7
-## Elapsed time: 0 seconds
-## [1] &quot;Extracting PCA embeddings and feature loadings...&quot;
-## [1] &quot;Filtering to common genes across datasets...&quot;
-## [1] &quot;Computing projection matrices...&quot;
-## [1] &quot;Combining data for correlation analysis...&quot;
-## [1] &quot;Normalizing correlation matrices...&quot;
-## [1] &quot;Computing correlation matrix...&quot;
-## [1] &quot;Adjusting correlation matrix based on spatial information...&quot;
-## [1] &quot;Setting up clustering variables...&quot;
-## [1] &quot;Determining available CPU cores for parallel processing...&quot;
-## [1] &quot;Using 8 CPU cores for parallel processing...&quot;
-## [1] &quot;Running FDR calculations in parallel...&quot;
-## [1] &quot;Parallel computation complete. Compiling results...&quot;
-## [1] &quot;Constructing sparse matrix efficiently...&quot;
-## [1] &quot;Probability matrix computation complete!&quot;</code></pre>
 </div>
 
 
