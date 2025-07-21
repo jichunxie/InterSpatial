@@ -4,7 +4,13 @@
 \alias{find_cluster_scRNA_HGC}
 \title{Hierarchical Graph Clustering for scRNA-seq}
 \usage{
-find_cluster_scRNA_HGC(dat_scRNA, k, num_pca = 100, p_hvg = 2000)
+find_cluster_scRNA_HGC(
+  dat_scRNA,
+  k,
+  num_pca = 100,
+  p_hvg = 2000,
+  cell_type_column = NULL
+)
 }
 \arguments{
 \item{dat_scRNA}{Seurat object with SCT assay.}
@@ -14,6 +20,8 @@ find_cluster_scRNA_HGC(dat_scRNA, k, num_pca = 100, p_hvg = 2000)
 \item{num_pca}{Number of principal components.}
 
 \item{p_hvg}{Number of highly variable genes.}
+
+\item{cell_type_column}{Optional. Column name in Seurat object metadata to assign cell types for cluster summary.}
 }
 \value{
 A data frame with cell names and assigned cluster IDs.

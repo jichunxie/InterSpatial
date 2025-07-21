@@ -2,20 +2,19 @@
 % Please edit documentation in R/create_meta_cells.R
 \name{compute_all_clusters_prob_matrix}
 \alias{compute_all_clusters_prob_matrix}
-\title{Aggregate Probabilities Across All Clusters}
+\title{Aggregate Probabilities Across All Clusters (Non-Parallel, Zero-filled)}
 \usage{
-compute_all_clusters_prob_matrix(prob_data, cluster_labels, nCores = NULL)
+compute_all_clusters_prob_matrix(prob_data, cluster_labels)
 }
 \arguments{
-\item{prob_data}{Probability matrix (cells x spatial spots).}
+\item{prob_data}{Probability matrix (cells x spatial spots), rownames are cell IDs.}
 
-\item{cluster_labels}{A vector of cluster labels for each cell.}
-
-\item{nCores}{Optional number of CPU cores to use.}
+\item{cluster_labels}{A data frame with columns 'cell' and 'cluster'.}
 }
 \value{
 A sparse matrix (clusters x spatial spots).
 }
 \description{
-Computes a new matrix of average probabilities for each cluster using parallelization.
+Computes a matrix of average probabilities per cluster using matrix operations.
+Returns 0 rows for clusters with no valid (nonzero) cells.
 }

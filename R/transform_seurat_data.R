@@ -53,6 +53,11 @@ transform_spatial_data <- function(dat_visium, thres=NULL) {
     stop("Error: The input does not have a Spatial Assay.")
   }
   
+  if(length(which(colSums(dat_visium@assays$Spatial@counts)==0))>0)
+  {
+    dat_visium <- dat_visium[,-which(colSums(dat_visium@assays$Spatial@counts)==0)]
+  }
+  
   n_spatial <- ncol(dat_visium)
   
   if (is.null(thres)) {

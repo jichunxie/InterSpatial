@@ -1,14 +1,16 @@
 ---
 title: "Tutorial for InterSpatial"
+author: "Tuhin Majumder"
+date: "2024-11-25"
 output:
   html_document:
-    theme: readable   # or cosmo, flatly, united, etc.
+    theme: readable
     toc: true
     toc_depth: 2
     df_print: paged
-
-date: "2024-11-25"
-author: Tuhin Majumder
+  pdf_document:
+    toc: true
+    toc_depth: '2'
 ---
 
 
@@ -19,6 +21,7 @@ author: Tuhin Majumder
 library(InterSpatial)
 library(Seurat)
 library(HGC)
+library(pheatmap)
 ```
 
 
@@ -33,7 +36,9 @@ The visium data input must be a `.h5` file from the Space Ranger output, contain
 
 ```{r message=FALSE, warning=FALSE}
 ## Read scRNA data
-dat_scRNA <- readRDS("../data/toy_scRNA/mouse_brain_small.rds")
+toy_scrna_path <- system.file("extdata", "toy_scRNA", "mouse_brain_small.rds", package = "InterSpatial")
+dat_scRNA <- readRDS(toy_scrna_path)
+
 
 #Transform scRNA data
 
@@ -46,7 +51,7 @@ dat_scRNA <- transform_scRNA_data(dat_scRNA)
 ```{r message=FALSE, warning=FALSE}
 ## Load visium Data
 # Change the data location with user's convenience
-visium.data.dir = "../data/toy_visium/" 
+visium.data.dir = "../inst/extdata/toy_visium/" 
 dat_visium <- Load10X_Spatial(visium.data.dir,
                         filename = "mouse_filtered_feature_bc_matrix.h5",
                         assay = "Spatial",
@@ -70,4 +75,101 @@ From the transformed input data sets, we developed an algorithm to map the singl
 
 prob_matrix <- create_probability_matrix(dat_scRNA = dat_scRNA,dat_visium = dat_visium, p_hvg=50, num_pca = 10, alpha=0.05, nCores=8)
 
+```
+
+
+# Creating meta-cells
+
+Next, we use `HGC` package to cluster the scRNA-seq data into a few meta-cells, and then attribute the meta-cells to their most common cell type. In practice, we fix the number of meta-cells to an integer so that on average each meta-cell has $80-100$ single cells. `HGC` produces meta-cells of uniform size, and generally these meta-cells have one dominant cell-type, as shown in the figure.
+
+```{r message=FALSE, warning=FALSE, results='hide'}
+## Create Probability matrix
+
+cluster_HGC_scRNA <- find_cluster_scRNA_HGC(dat_scRNA = dat_scRNA,k=100,num_pca = 10,p_hvg=50, cell_type_column = "subclass")
+
+cell_type_proportion_meta_cells <- attr(cluster_HGC_scRNA,"cell_type_proportion_meta_cells")
+pheatmap(cell_type_proportion_meta_cells ,Rowv=F, scale='none', symm = T,main = paste0("Cell Type Distribution (proportion) in Meta-Cells"),
+         show_rownames = F)
+
+```
+
+## Constructing meta-cell mapping
+
+Once, we get the meta-cells, we compute the spatial mapping of the meta-cells by averaging the individual mapping probabilities in each spot. 
+
+```{r message=FALSE, warning=FALSE, results='hide'}
+## Compute meta-cell probability mapping
+
+prob_data_hier_cluster <- compute_all_clusters_prob_matrix(prob_data = prob_matrix,cluster_labels = cluster_HGC_scRNA)
+
+```
+
+# Compute meta-cell to meta-cell Wasserstein distance
+
+## Computing meta-cell to meta-cell distances for arbitrary source and receiving meta-cells
+
+In this section,we compute the pairwise wasseretsin distance between source meta-cells and the receiver meta-cells. These source and receiving meta-cells ids need to be provided as input, along with the spot-spot distance matrix. This distance matrix can be constructed from the $(x,y)$ co-ordinates of the visium spots.
+
+```{r message=FALSE, warning=FALSE, results='hide'}
+source_cell_type <- "Vip"
+receiving_cell_type <- "L4"
+
+nnz_meta_cells <- which(rowSums(prob_data_hier_cluster)>0)
+source_meta_cells <- intersect(which(cell_type_proportion_meta_cells[,source_cell_type]>0.5),
+                               nnz_meta_cells)
+receving_meta_cells <- intersect(which(cell_type_proportion_meta_cells[,receiving_cell_type]>0.5),
+                                 nnz_meta_cells)
+
+D <- create_distance_matrix(prob_data = prob_data_hier_cluster,dat_visium = dat_visium,
+                            visium.data.dir = visium.data.dir )
+
+distances <- compute_wasserstein_distance(prob_data=prob_data_hier_cluster,
+                                          source_cell_id = source_meta_cells,
+                                          receiver_cell_id = receving_meta_cells,
+                                          Distance_Matrix = D,
+                                          nCores = 4,
+                                          parallelize = "FALSE",
+                                          out_dir = "/cwork/tm389")
+
+```
+
+## Computing Wasserstein distances between meta-cells of different cell types
+
+If the scRNA-seq dataset has a cell type identification in the metadata, we can construct meta-cells from these cell types and compute the Wasserstein distance between the meta-cells of source cell type and reciver cell types. Here, we have two optional input `thres_source_proportion` and `thres_receiver_proportion` with default value $0.5$, which indicates if the proportion of cell types are more than these thresholds in the meta-cell, we label them as source or receiver respectively. 
+
+
+```{r message=FALSE, warning=FALSE, results='hide'}
+distances_2 <- compute_wasserstein_distance_between_cell_type(prob_data=prob_data_hier_cluster, dat_visium = dat_visium,
+                                                              visium.data.dir=visium.data.dir,
+                                                              source_cell_type = "Sst",
+                                                              receiver_cell_type = "L6 IT",
+                                                              cluster_labels = cluster_HGC_scRNA,
+                                                              nCores=4)
+
+```
+
+# Inferring CCC
+
+From the Wasserstein distances between source and reciever cell-types, we can compute the Kendall's-$\tau$ between the receptor's expression in receiving meta cells, and their nearest optimal transport distances (NOTD) from the source. We also visualize the trend in a scatterplot.
+
+```{r message=FALSE, warning=FALSE, results='hide'}
+library(dplyr)
+library(ggplot2)
+all_gene_count_meta_cell <- create_meta_cell_gene_count_matrix(dat_scRNA = dat_scRNA, cluster_labels =cluster_HGC_scRNA )
+
+data(ligand_receptor_interactions_mouse)
+
+## Most Expressed genes in source
+
+Exp_source <- colMeans(all_gene_count_meta_cell[unique(distances_2$wasserstein_distance$clust_ind_source),])
+top_genes <- names(sort(Exp_source,decreasing = TRUE))[1:10]
+
+
+scRNA_receptors <- intersect(colnames(all_gene_count_meta_cell) ,
+                             unlist(strsplit(ligand_receptor_interactions_mouse$receptor.symbol, ",\\s*")))
+
+all_tau <- as.data.frame(t(sapply(scRNA_receptors, function(x)compute_tau(distances_2, all_gene_count_meta_cell,  x)) ))
+
+
+plot_receptor_expression(distances_2, all_gene_count_meta_cell,  "Ramp2")
 ```

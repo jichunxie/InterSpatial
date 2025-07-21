@@ -7,9 +7,9 @@
 compute_single_cluster_prob(prob_data, cluster_labels, cluster_id)
 }
 \arguments{
-\item{prob_data}{Probability matrix (cells x spatial spots).}
+\item{prob_data}{Probability matrix (cells x spatial spots), rownames are cell IDs.}
 
-\item{cluster_labels}{A vector of cluster labels for each cell.}
+\item{cluster_labels}{A data frame with columns 'cell' and 'cluster'.}
 
 \item{cluster_id}{The cluster ID to compute the average for.}
 }
@@ -17,5 +17,5 @@ compute_single_cluster_prob(prob_data, cluster_labels, cluster_id)
 A numeric vector of average probabilities for the selected cluster.
 }
 \description{
-Computes mean probabilities for all spatial regions given one cluster of scRNA-seq data.
+Computes the mean probabilities for all spatial regions given one cluster of scRNA-seq data.
 }
