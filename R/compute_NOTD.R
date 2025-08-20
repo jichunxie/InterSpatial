@@ -55,9 +55,10 @@ compute_tau <- function(meta_cells_distance, gene_count_matrix_meta_cells, recep
   corr_val_round <- round(corr_val, 2)
   test_cor <- cor.test(plot_data$distance, plot_data$receptor_val, method = "kendall")
   p_val <- test_cor$p.value
+  s.e <- test_cor$estimate/test_cor$statistic
   formatted_p_val <- ifelse(p_val < 0.001, "p-value < 0.001", paste0("p-value = ", round(p_val, 3)))
 
-  return (list("tau" = corr_val, "tau_round" = corr_val_round, "p_value" = p_val, "P_val" = formatted_p_val))
+  return (list("tau" = corr_val, "tau_round" = corr_val_round, "p_value" = p_val, "P_val" = formatted_p_val,"s.e"=s.e))
 }
 
 

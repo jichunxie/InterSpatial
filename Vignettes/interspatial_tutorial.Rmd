@@ -152,7 +152,7 @@ distances_2 <- compute_wasserstein_distance_between_cell_type(prob_data=prob_dat
 
 From the Wasserstein distances between source and reciever cell-types, we can compute the Kendall's-$\tau$ between the receptor's expression in receiving meta cells, and their nearest optimal transport distances (NOTD) from the source. We also visualize the trend in a scatterplot.
 
-```{r message=FALSE, warning=FALSE, results='hide'}
+```{r message=FALSE, warning=FALSE, results='hide',fig.width=10, fig.height=6}
 library(dplyr)
 library(ggplot2)
 all_gene_count_meta_cell <- create_meta_cell_gene_count_matrix(dat_scRNA = dat_scRNA, cluster_labels =cluster_HGC_scRNA )
